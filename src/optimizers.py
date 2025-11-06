@@ -16,10 +16,6 @@ class Adam(Optimizer):
         self.v = None
     
     def update(self, params, grads):
-        """
-        params: lista de [W1, b1, W2, b2, ...]
-        grads: lista de [dW1, db1, dW2, db2, ...]
-        """
         if self.m is None:
             self.m = [np.zeros_like(p) for p in params]
             self.v = [np.zeros_like(p) for p in params]
@@ -27,16 +23,15 @@ class Adam(Optimizer):
         self.t += 1
         
         for i in range(len(params)):
-            # Momento primer orden
+            # GRADIENT CLIPPING (previene explosión)
+            grads[i] = np.clip(grads[i], -5.0, 5.0)
+            
             self.m[i] = self.beta1 * self.m[i] + (1 - self.beta1) * grads[i]
-            # Momento segundo orden
             self.v[i] = self.beta2 * self.v[i] + (1 - self.beta2) * (grads[i]**2)
             
-            # Corrección de sesgo
             m_hat = self.m[i] / (1 - self.beta1**self.t)
             v_hat = self.v[i] / (1 - self.beta2**self.t)
             
-            # Actualización
             params[i] -= self.lr * m_hat / (np.sqrt(v_hat) + self.epsilon)
 
 class SGD(Optimizer):

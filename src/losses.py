@@ -20,9 +20,12 @@ class CategoricalCrossentropy(Loss):
     def forward(self, y_pred, y_true):
         m = y_true.shape[0]
         epsilon = 1e-10
-        y_pred = np.clip(y_pred, epsilon, 1 - epsilon)
-        return -np.sum(y_true * np.log(y_pred)) / m
+        y_pred_clipped = np.clip(y_pred, epsilon, 1 - epsilon)
+        return -np.sum(y_true * np.log(y_pred_clipped)) / m
     
     def backward(self, y_pred, y_true):
+        """Solo se usa si NO hay softmax en la última capa"""
         m = y_true.shape[0]
-        return (y_pred - y_true) / m 
+        epsilon = 1e-10
+        y_pred_clipped = np.clip(y_pred, epsilon, 1 - epsilon)
+        return -(y_true / y_pred_clipped) / m

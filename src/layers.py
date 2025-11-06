@@ -17,14 +17,16 @@ class Dense(Layer):
         self.activation = activation if activation else Sigmoid()
         
         # Inicialización pesos
+        # En Dense.__init__(), cambiar inicialización:
         if weight_init == 'xavier':
             limit = np.sqrt(6 / (n_inputs + n_neurons))
             self.W = np.random.uniform(-limit, limit, (n_inputs, n_neurons))
         elif weight_init == 'he':
             self.W = np.random.randn(n_inputs, n_neurons) * np.sqrt(2/n_inputs)
         else:
-            self.W = np.random.randn(n_inputs, n_neurons) * 0.01
-        
+            # Para sigmoid, usar inicialización más agresiva
+            self.W = np.random.randn(n_inputs, n_neurons) * 0.5  # Cambiar de 0.01 a 0.5
+
         self.b = np.zeros((1, n_neurons))
         
         # Cache para backward
@@ -40,22 +42,26 @@ class Dense(Layer):
     
     def backward(self, grad_output):
         """
-        grad_output: gradiente de loss respecto a la SALIDA de esta capa (a)
+        grad_output: gradiente que llega de la capa siguiente
+        Para última capa: ya viene como (y_pred - y_true) / m
+        Para capas ocultas: viene del backward de la siguiente
         """
         m = self.X.shape[0]
         
-        # Para activaciones especiales (ReLU), pasamos grad_output directamente
-        if isinstance(self.activation, ReLU):
-            grad_z = self.activation.backward(grad_output)
+        # SOLO aplicar derivada de activación si NO es softmax en última capa
+        # El flag se manejará desde NeuralNetwork
+        if hasattr(self, 'skip_activation_grad') and self.skip_activation_grad:
+            grad_z = grad_output
         else:
-            # Para sigmoid/tanh: multiplicar por derivada de activación
-            grad_z = grad_output * self.activation.backward(self.a)
+            # Aplicar derivada de activación
+            if isinstance(self.activation, ReLU):
+                grad_z = grad_output * (self.z > 0).astype(float)
+            else:
+                grad_z = grad_output * self.activation.backward(self.a)
         
-        # Gradientes de parámetros
+        # Gradientes
         self.dW = np.dot(self.X.T, grad_z) / m
         self.db = np.sum(grad_z, axis=0, keepdims=True) / m
-        
-        # Gradiente hacia capa anterior
         grad_X = np.dot(grad_z, self.W.T)
         
         return grad_X
