@@ -1,4 +1,7 @@
 import numpy as np
+from .activations import Sigmoid, Tanh, ReLU, Softmax
+
+__all__ = ['Activation', 'Sigmoid', 'Tanh', 'ReLU', 'Softmax']
 
 class Activation:
     """Clase base para funciones de activación"""

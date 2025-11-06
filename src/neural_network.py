@@ -51,9 +51,16 @@ class NeuralNetwork:
     
     def backward(self, y_true):
         """Backward pass por todas las capas"""
-        # Gradiente de la loss
         y_pred = self.layers[-1].a
-        grad = self.loss_fn.backward(y_pred, y_true)
+        
+        # CASO ESPECIAL: Softmax + Categorical Crossentropy
+        if isinstance(self.layers[-1].activation, Softmax) and \
+        isinstance(self.loss_fn, CategoricalCrossentropy):
+            # El gradiente simplifica a (y_pred - y_true)
+            grad = (y_pred - y_true) / y_true.shape[0]
+        else:
+            # Caso general
+            grad = self.loss_fn.backward(y_pred, y_true)
         
         # Backprop por capas en reversa
         for layer in reversed(self.layers):
