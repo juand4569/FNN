@@ -24,11 +24,5 @@ class CategoricalCrossentropy(Loss):
         return -np.sum(y_true * np.log(y_pred)) / m
     
     def backward(self, y_pred, y_true):
-        """
-        Para softmax + categorical_crossentropy simplifica a:
-        gradient = (y_pred - y_true) / m
-        """
         m = y_true.shape[0]
-        epsilon = 1e-10
-        y_pred = np.clip(y_pred, epsilon, 1 - epsilon)
-        return -(y_true / y_pred) / m
+        return (y_pred - y_true) / m 
