@@ -26,12 +26,15 @@ class Tanh(Activation):
         return 1 - a**2
 
 class ReLU(Activation):
+    def __init__(self):
+        self.z = None
+    
     def forward(self, z):
+        self.z = z  # Guardar z
         return np.maximum(0, z)
     
-    def backward(self, z):
-        """ReLU deriva respecto a z directamente"""
-        return (z > 0).astype(float)
+    def backward(self, grad_output):
+        return grad_output * (self.z > 0).astype(float)
 
 class Softmax(Activation):
     def forward(self, z):

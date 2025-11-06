@@ -1,5 +1,5 @@
 import numpy as np
-from .activations import Sigmoid
+from .activations import Sigmoid, ReLU
 
 class Layer:
     """Clase base para capas"""
@@ -40,13 +40,16 @@ class Dense(Layer):
     
     def backward(self, grad_output):
         """
-        grad_output: gradiente de loss respecto a la salida de esta capa
-        Returns: gradiente respecto a la entrada X
+        grad_output: gradiente de loss respecto a la SALIDA de esta capa (a)
         """
         m = self.X.shape[0]
         
-        # Gradiente a través de la activación
-        grad_z = grad_output * self.activation.backward(self.a)
+        # Para activaciones especiales (ReLU), pasamos grad_output directamente
+        if isinstance(self.activation, ReLU):
+            grad_z = self.activation.backward(grad_output)
+        else:
+            # Para sigmoid/tanh: multiplicar por derivada de activación
+            grad_z = grad_output * self.activation.backward(self.a)
         
         # Gradientes de parámetros
         self.dW = np.dot(self.X.T, grad_z) / m
